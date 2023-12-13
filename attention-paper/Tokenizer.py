@@ -16,7 +16,7 @@ def pretokenization_process(sentence_corpus):
 
     return pretoken_process
     
-    
+import chardet   
 
 class BPETokenizer():
     def __init__(self, sentences_corpus, vocab_size, ):
@@ -28,6 +28,8 @@ class BPETokenizer():
         self.word_count= BPETokenizer.get_word_count(self)
         self.base_vocab= [chr(i) for i in range(128)]
         self.german_chars= ["ẞ","ß", "ä", "ö", "ü", "Ä", "Ö", "Ü"]
+        self.german_chars= [char for char in self.german_chars]
+        
         self.base_vocab.extend(self.german_chars)
         self.splits= {word : [c for c in word] for word in self.word_count.keys()}
         self.merges= {}
@@ -40,6 +42,7 @@ class BPETokenizer():
             for word in new_word:
                 count_dict[word]+= 1
         print("Init Count Dict: ", count_dict)
+        
         return count_dict
 
     def pair_freqs(self):
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     sentences= ["this is an test example", 'yes, this is an example indeed', 
                 'what is this example for?' , "this exmap is for testing the tokenizer"]
     
-    df_test= pd.read_csv('./dataset/wmt14/dataset_init_test.csv', encoding= 'utf-8')
+    df_test= pd.read_csv('./dataset/wmt14/dataset_init_test.csv', encoding= 'utf-8-sig')
     english_sentences= []
     german_sentences= []
     print(df_test['translation'][0])
@@ -116,15 +119,17 @@ if __name__ == "__main__":
         english_sentences.append(literal_eval(rows['translation'])['en'])
         german_sentences.append(literal_eval(rows['translation'])['de'])
     
-
+    print(german_sentences[:10])
     english_sentences.extend(german_sentences)
     #print(english_sentences[:5])
     tokenizer= BPETokenizer(english_sentences, 1024)
-    
+    tok_byte_decode= AutoTokenizer.from_pretrained("gpt2")
     tokenizer.train()
     #print(tokenizer.base_vocab)
     print(tokenizer.tokenize("this is an example to test"))
     for sent in german_sentences[:10]:
-        print(tokenizer.tokenize(sent))
+        for toked in tokenizer.tokenize(sent):
+            print(tok_byte_decode.decode(toked))
+        #print(tokenizer.tokenize(sent))
 
 
